@@ -1,7 +1,7 @@
-const moongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-moongoose.connect =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/socialDB';
+mongoose.connect(
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/social-media-app"
+);
 
-
-module.exports = moongoose.connection;
+module.exports = mongoose.connection;
