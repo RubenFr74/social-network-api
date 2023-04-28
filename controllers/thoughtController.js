@@ -1,110 +1,124 @@
-const { User, Thoughts } = require('../models');
+const { Thought, User } = require('../models');
 
-const userController = {
-    async getUsers(req, res) {
+const thoughtController = {
+    async getThought(req, res) {
         try {
-            const dbUserData = await User.find()
-                .select('-__v')
-                
-            res.json(dbUserData);
+            const dbThoughtData = await Thought.find()
+                .sort({ createdAt: -1 });
+
+            res.json(dbThoughtData);
         } catch (err) {
             console.log(err);
             res.status(500).json(err);
         }
     },
-    //Gets a single user by id
-    async getSingleUser(req,res) {
+    async getSingleThought(req, res) {
         try {
-            const dbUserData = await User.findOne({ _id: req.params.id })
-                .populate('friends')
-                .populate('thoughts')
-                .select('-__v');
-            if (!dbUserData) {
-                return res.status(404).json({ message: 'No user found with this id!' });
+            const dbThoughtData = await Thought.findOne({ _id: req.params.id })
+
+            if (!dbThoughtData) {
+                return res.status(404).json({ message: 'No thought found with this id!' });
             }
-            res.json(dbUserData);
+
+            res.json(dbThoughtData);
         } catch (err) {
             console.log(err);
             res.status(500).json(err);
         }
     },
-    //Creates a user
-    async createUser(req, res) {
+
+    async createThought(req, res) {
         try {
-            const dbUserData = await User.create(req.body);
-            res.json(dbUserData);
-        } catch (err) {
-            console.log(err);
-            res.status(500).json(err);
-        }
-    },
-    //Updates a user by id
-    async updateUser(req, res) {
-        try {
+            const dbThoughtData = await Thought.create(req.body);
             const dbUserData = await User.findOneAndUpdate(
-                { _id: req.params.id },
-                {
-                    $set: req.body,
-                },
-                {
-                    runValidators: true,
-                    new: true,
-                }
+                { _id: req.body.userId },
+                { $push: { thoughts: dbThoughtData._id } },
+                { new: true }
             );
+
             if (!dbUserData) {
-                return res.status(404).json({ message: 'No user found with this id!' });
+                return res.status(404).json({ message: 'No user found with this user id!' });
             }
-            res.json(dbUserData);
+            res.json(dbThoughtData);
+        }
+        catch (err) {
+            console.log(err);
+            res.status(500).json(err);
+        } 
+    },
+    async updateThought(req, res) {
+        const dbThoughtData = await Thought.findOneAndUpdate(
+            { _id: req.params.id },
+            { $set: req.body },
+            { runValidators: true, new: true }
+        );
+
+        if (!dbThoughtData) {
+            return res.status(404).json({ message: 'No thought found with this id!' });
+        }
+
+        res.json(dbThoughtData);
+        console.log(err);
+        res.status(500).json(err);
+    },
+    async deleteThought(req, res) {
+        try {
+            const dbThoughtData = await Thought.findOneAndDelete({ _id: req.params.thoughtId })
+
+            if (!dbThoughtData) {
+                return res.status(404).json({ message: 'No thought found with this id!' });
+            }
+
+            const dbUserData = await User.findOneAndUpdate(
+                { thoughts: req.params.thoughtId },
+                { $pull: { thoughts: req.params.thoughtId } },
+                { new: true }
+            );
+
+            if (!dbUserData) {
+                return res.status(404).json({ message: 'No user found with this user id!' });
+            }
+
+            res.json({ message: 'Thought successfully deleted!' });
         } catch (err) {
             console.log(err);
             res.status(500).json(err);
         }
     },
-    //Deletes a user by id
-    async deleteUser(req, res) {
+    async createReaction(req, res) {
         try {
-            const dbUserData = await User.findOneAndDelete({ _id: req.params.id })
-            if (!dbUserData) { 
-                return res.status(404).json({ message: 'No user found with this id!' });
+            const dbThoughtData = await Thought.findOneAndUpdate(
+                { _id: req.params.thoughtId },
+                { $addToSet: { reactions: req.body } },
+                { runValidators: true, new: true }
+            );
+            if (!dbThoughtData) {
+                return res.status(404).json({ message: 'No thought found with this id!' });
             }
-
-            await Thoughts.deleteMany({ _id: { $in: dbUserData.thoughts } });
-            res.json({ message: 'User and their thoughts deleted!' });
+            res.json(dbThoughtData);
         } catch (err) {
             console.log(err);
             res.status(500).json(err);
         }
-    },  
-async addFriend(req, res) {
-    try {
-        const dbUserData = await User.findOneAndUpdate(
-            { _id: req.params.id },
-            { $addToSet: { friends: req.params.friendId } },
-            { new: true });
-        if (!dbUserData) {
-            return res.status(404).json({ message: 'No user found with this id!' });
-        }
-        res.json(dbUserData);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json(err);
-    }
-},
-async removeFriend(req, res) {
-    try {
-        const dbUserData = await User.findOneAndUpdate(
-            { _id: req.params.id },
-            { $pull: { friends: req.params.friendId } },
-            { new: true });
+    },
+    async deleteReaction(req, res) {
+        try {
+            const dbThoughtData = await Thought.findOneAndUpdate(
+                { _id: req.params.thoughtId },
+                { $pull: { reactions: { reactionId: req.params.reactionId } } },
+                { runValidators: true, new: true }
+            );
 
-        if (!dbUserData) {
-            return res.status(404).json({ message: 'No user found with this id!' });
+            if (!dbThoughtData) {
+                return res.status(404).json({ message: 'No thought found with this id!' });
+            }
+            
+            res.json(dbThoughtData);
+        } catch (err) {
+            console.log(err);
+            res.status(500).json(err);
         }
-        res.json(dbUserData);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json(err);
     }
-},
 };
-module.exports = userController;
+
+module.exports = thoughtController;
