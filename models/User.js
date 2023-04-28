@@ -1,4 +1,4 @@
-const { Schema, model, Types } = require('mongoose');
+const { Schema, model } = require('mongoose');
 
 const userSchema = new Schema(
   {
@@ -14,7 +14,7 @@ const userSchema = new Schema(
       unique: true,
       match: [
         /.+@.+\..+/,
-        "Please fill a valid email address",
+        "Please enter a valid email address",
       ],
     },
     thoughts: [

@@ -1,51 +1,21 @@
-const { Schema, model, Types } = require('mongoose');
-// import moment module to format the timestamp 
-const moment = require('moment')
-
-//reaction schema
-const reactionSchema = new Schema (
-    {
-       reactionId: {
-        type: Schema.Types.ObjectId,
-        default: () => new Types.ObjectId(),
-       },
-       reactionBody: {
-        type: String,
-        required: true,
-        maxlength: 280
-       },
-       username: {
-        type: String,
-        required: true,
-       },
-       createdAt: {
-        type: Date,
-        default: Date.now,
-        get: createdAtVal => moment(createdAtVal).format("MMM DD, YYYY [at] hh:mm a"),
-       },
-    },
-    {
-        toJSON: {
-            virtuals: true,
-            getters: true
-        },
-        id: false,
-    }
-)
+const { Schema, model } = require('mongoose');
+// import module to format the timestamp 
+const moment = require('../utils/dateFormat');
+const reactionSchema = require('./Reaction');
 
 // thought schema
 const thoughtSchema = new Schema (
     {
       thoughtText: {
         type: String,
-        required: true,
+        required: 'You need to leave a thought!',
         minlength: 1,
         maxlength: 280,
       },
       createdAt: {
         type: Date,
         default: Date.now,
-        get: createdAtVal => moment(createdAtVal).format("MMM DD, YYYY [at] hh:mm a"),
+        get: timestamp => dateFormat(timestamp)
       },
       username: {
         type: String,
@@ -55,7 +25,6 @@ const thoughtSchema = new Schema (
     },
     {
         toJSON: {
-            virtuals: true,
             getters: true,
         },
         id: false,
