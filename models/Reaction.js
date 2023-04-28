@@ -1,6 +1,6 @@
 const { Schema, Types } = require('mongoose');
 // import module to format the timestamp 
-const moment = require('../utils/dateFormat')
+const dateFormat = require('../utils/dateFormat')
 
 //reaction schema
 const reactionSchema = new Schema (
